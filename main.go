@@ -1,29 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"net"
+	"os"
 )
-
-func client() {
-	conn, _ := net.Dial("tcp", ":8080")
-
-	conn.Write([]byte("Hello World!"))
-}
-
-func server() {
-	listener, _ := net.Listen("tcp", ":8080")
-
-	b := make([]byte, 1024)
-
-	for {
-		conn, _ := listener.Accept()
-		_, _ = conn.Read(b)
-		fmt.Println("[Client]\t", string(b))
-	}
-
-}
 
 func main() {
 	is_server := false
@@ -32,10 +15,55 @@ func main() {
 	flag.Parse()
 
 	if is_server {
-		fmt.Println(":::: RUNNING SERVER ::::")
 		server()
 	} else {
-		fmt.Println(":::: RUNNING CLIENT ::::")
 		client()
 	}
+}
+
+func client() {
+	fmt.Println(":::: RUNNING CLIENT ::::")
+	scanner := bufio.NewReader(os.Stdin)
+
+	for {
+		// Receive string from user
+		fmt.Print("> ")
+		msg, _, err := scanner.ReadLine()
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		// Send message to server
+		conn, _ := net.Dial("tcp", ":8080")
+		conn.Write(msg)
+
+		// Waits to receive response from server
+		b := make([]byte, 1024)
+		conn.Read(b)
+		fmt.Println("[res] ", string(b))
+	}
+
+}
+
+func server() {
+	listener, err := net.Listen("tcp", ":8080")
+	fmt.Println(":::: RUNNING SERVER ::::")
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	for {
+		// Receive and print message from client
+		connServer, _ := listener.Accept()
+		b := make([]byte, 1024)
+		connServer.Read(b)
+		fmt.Println("[Client] ", string(b))
+
+		// Prepare response message
+		connServer.Write([]byte("re: Message sent successfully!"))
+	}
+
 }
