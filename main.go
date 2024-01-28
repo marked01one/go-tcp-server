@@ -12,5 +12,11 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println(utils.Greeting())
+	if is_server {
+		fmt.Print("::::: RUNNING SERVER :::::\n\n")
+		utils.Server()
+	} else {
+		fmt.Print("::::: RUNNING CLIENT :::::\n\n")
+		utils.Client()
+	}
 }
