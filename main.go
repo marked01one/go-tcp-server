@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"tcp_server/utils"
+	"tcp_server/server"
 )
 
 func main() {
@@ -14,9 +14,9 @@ func main() {
 
 	if !is_client {
 		fmt.Print("::::: RUNNING SERVER :::::\n\n")
-		utils.Server()
+		server.Server()
 	} else {
 		fmt.Print("::::: RUNNING CLIENT :::::\n\n")
-		utils.Client()
+		server.Client()
 	}
 }
