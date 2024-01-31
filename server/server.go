@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net"
 	"strings"
 )
@@ -16,33 +17,45 @@ func Server() {
 		// Read request content from client
 		b := make([]byte, 1024*4)
 		conn.Read(b)
-
+		fmt.Println(string(b))
 		lines := strings.Fields(string(b))
-		method, path := lines[0], lines[1]
+		req := Request{}
+		req.Parse(lines)
 
 		// Determine response type based on request
-		switch path {
+		switch req.path {
 
 		case "/":
 			conn.Write(getPage("200 OK", "./pages/html/index.html"))
-			logRes(method, path, "200 OK")
+			logRes(req.method, req.path, "200 OK")
 
 		case "/api":
-			if method == "GET" {
+			if req.method == "GET" {
 				helloWorld := HelloWorld{Name: "Hello World!", Age: 69}
 				res := JsonObject[HelloWorld]{Data: helloWorld}
 				conn.Write(res.GetJsonResponse("200 OK"))
-				logRes(method, path, "200 OK")
+				logRes(req.method, req.path, "200 OK")
 
-			} else if method == "POST" {
-				continue
+			} else if req.method == "POST" {
+				// Handle case where response body is not in JSON
+				if req.content_type != "application/json" {
+					conn.Write(getBasicError("400 Bad Request"))
+					break
+				}
+				// Generate JSON response body
+				helloWorld := HelloWorld{Name: "Hello World!", Age: 69}
+				res := JsonObject[HelloWorld]{Data: helloWorld}
+				conn.Write(res.GetJsonResponse("200 OK"))
+				logRes(req.method, req.path, "200 OK")
+
 			}
 
 		default:
 			conn.Write(getPage("404 Not Found", "./pages/html/errors/404.html"))
-			logRes(method, path, "404 Not Found")
+			logRes(req.method, req.path, "404 Not Found")
 
 		}
 
+		conn.Close()
 	}
 }

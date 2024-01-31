@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 /*
@@ -21,12 +22,40 @@ var Colors map[string]string = map[string]string{
 /*
  * HELPER TYPES -----------------------------------------------------------------
  */
+type Request struct {
+	method         string
+	path           string
+	host           string
+	content_type   string
+	content_length int
+	content        string
+}
+
 type Response struct {
 	server         string
 	date           string
 	content_length int
 	content_type   string
 	content        []byte
+}
+
+func (req *Request) Parse(lines []string) {
+	req.method = lines[0]
+	req.path = lines[1]
+	req.content = lines[len(lines)-1]
+
+	for i, element := range lines {
+		switch element {
+		case "Host:":
+			req.host = lines[i+1]
+
+		case "Content-Type:":
+			req.content_type = lines[i+1]
+
+		case "Content-Length:":
+			req.content_length, _ = strconv.Atoi(lines[i+1])
+		}
+	}
 }
 
 /*
